@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body {
+    font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.55); opacity: 0; }
+  70% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes slideInRight {
+  0% { transform: translateX(22px); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes sheetUp {
+  0% { transform: translateY(28px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.animate-pop-in {
+  animation: popIn 0.34s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-slide-in {
+  animation: slideInRight 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-sheet-up {
+  animation: sheetUp 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
