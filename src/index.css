@@ -3,6 +3,8 @@
 @tailwind utilities;
 
 @layer base {
+  /* Entry animations slide 22px in from the right; clip so phones never get a sideways scroll. */
+  body { overflow-x: clip; }
   html, body {
     font-family: 'Poppins', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -37,3 +39,22 @@
 .animate-sheet-up {
   animation: sheetUp 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
+
+/* Print: only the certificate / receipt being printed */
+@media print {
+  body.printing * { visibility: hidden !important; }
+  body.printing .print-target,
+  body.printing .print-target * { visibility: visible !important; }
+  body.printing .print-target {
+    position: absolute; left: 0; top: 0; width: 100%; max-width: none;
+    border: 0; box-shadow: none; border-radius: 0;
+  }
+  @page { size: A4; margin: 16mm; }
+}
+
+/* Accessibility (Part 12): visible keyboard focus everywhere, monochrome. */
+:focus-visible { outline: 2px solid rgba(10, 10, 10, 0.45); outline-offset: 2px; }
+.dark :focus-visible { outline-color: rgba(250, 250, 250, 0.5); }
+/* Expands the tap target of small round controls to 44px without changing how they look. */
+.hit-44 { position: relative; }
+.hit-44::after { content: ''; position: absolute; inset: -4px; border-radius: 9999px; }

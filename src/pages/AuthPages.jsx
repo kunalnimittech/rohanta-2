@@ -10,6 +10,7 @@ import {
   Landmark,
   Award,
   Check,
+  ChevronRight,
 } from 'lucide-react';
 import {
   Logo,
@@ -17,9 +18,13 @@ import {
   PrimaryButton,
   SecondaryButton,
   FloatingInput,
+  FloatingSelect,
   SelectableTile,
   BottomSheet,
+  OtpInput,
 } from '../components/ui';
+
+const DEMO_OTP = '123456';
 
 function AuthSplitShell({ isDark, onToggleTheme, children }) {
   return (
@@ -102,6 +107,7 @@ export function SignUpScreen({
   onToggleTheme,
   onSuccess,
   onGoLogin,
+  demoMode = true,
 }) {
   const [name, setName] = useState('Priya Kumari');
   const [mobile, setMobile] = useState('+91 98765 43210');
@@ -109,12 +115,85 @@ export function SignUpScreen({
   const [password, setPassword] = useState('••••••••••');
   const [showPw, setShowPw] = useState(false);
   const [agreed, setAgreed] = useState(true);
+  const [gender, setGender] = useState('Female');
+  const [otpStep, setOtpStep] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [otpError, setOtpError] = useState(false);
+  const [resent, setResent] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!agreed) return;
-    onSuccess();
+    setOtp('');
+    setOtpError(false);
+    setOtpStep(true);
   };
+
+  const verify = (e) => {
+    if (e) e.preventDefault();
+    if (otp !== DEMO_OTP) {
+      setOtpError(true);
+      return;
+    }
+    onSuccess({ name: name.trim(), mobile: mobile.trim(), email: email.trim(), gender });
+  };
+
+  if (otpStep) {
+    return (
+      <AuthSplitShell isDark={isDark} onToggleTheme={onToggleTheme}>
+        <form onSubmit={verify} className="space-y-5">
+          <div className="mb-2">
+            <h2 className="text-[28px] md:text-[32px] font-semibold tracking-[-0.025em]">
+              Verify your mobile
+            </h2>
+            <p className="mt-1.5 text-[15px] text-[#52525B] dark:text-[#A1A1AA]">
+              Enter the 6-digit code sent to {mobile}.
+            </p>
+          </div>
+          {otpError && (
+            <div className="flex items-center gap-2.5 px-4 py-3 rounded-full bg-[#F4F4F5] dark:bg-[#151515] border border-[#0A0A0A] dark:border-[#FAFAFA] text-[13px] font-medium animate-pop-in">
+              <AlertCircle className="w-4 h-4 shrink-0" strokeWidth={1.75} />
+              <span>That code is not right. Please try again.</span>
+            </div>
+          )}
+          <OtpInput
+            demo={demoMode}
+            value={otp}
+            onChange={(v) => {
+              setOtp(v);
+              setOtpError(false);
+            }}
+          />
+          <div className="flex items-center justify-between text-[13px]">
+            <button
+              type="button"
+              onClick={() => setOtpStep(false)}
+              className="font-medium text-[#52525B] dark:text-[#A1A1AA] hover:text-[#0A0A0A] dark:hover:text-[#FAFAFA]"
+            >
+              Change number
+            </button>
+            <button
+              type="button"
+              onClick={() => setResent(true)}
+              className="font-medium text-[#0A0A0A] dark:text-[#FAFAFA] underline underline-offset-4"
+            >
+              {resent ? 'Code resent' : 'Resend code'}
+            </button>
+          </div>
+          <div className="hidden md:block pt-2">
+            <PrimaryButton type="submit" disabled={otp.length !== 6} className="w-full">
+              Verify and continue
+            </PrimaryButton>
+          </div>
+          <div className="md:hidden fixed bottom-0 inset-x-0 p-4 bg-white/95 dark:bg-[#0A0A0A]/95 backdrop-blur-md border-t border-[#ECECEE] dark:border-[#262626] z-30">
+            <PrimaryButton type="submit" disabled={otp.length !== 6} className="w-full">
+              Verify and continue
+            </PrimaryButton>
+          </div>
+        </form>
+      </AuthSplitShell>
+    );
+  }
 
   return (
     <AuthSplitShell isDark={isDark} onToggleTheme={onToggleTheme}>
@@ -143,6 +222,12 @@ export function SignUpScreen({
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+        />
+        <FloatingSelect
+          label="Gender"
+          value={gender}
+          onChange={(e) => setGender(e.target.value)}
+          options={['Female', 'Male', 'Other', 'Prefer not to say']}
         />
         <FloatingInput
           label="Password"
@@ -216,7 +301,10 @@ export function LoginScreen({
   onToggleTheme,
   onSuccess,
   onGoSignup,
+  demoAccounts = [],
+  onDemoLogin,
 }) {
+  const [demoOpen, setDemoOpen] = useState(false);
   const [identifier, setIdentifier] = useState('+91 98765 43210');
   const [password, setPassword] = useState('priya@2026');
   const [showPw, setShowPw] = useState(false);
@@ -231,7 +319,7 @@ export function LoginScreen({
       return;
     }
     setShowError(false);
-    onSuccess();
+    onSuccess(identifier.trim());
   };
 
   return (
@@ -280,6 +368,7 @@ export function LoginScreen({
         />
 
         <div className="flex items-center justify-between text-[13px]">
+          {onDemoLogin ? (
           <button
             type="button"
             onClick={() => setShowError(!showError)}
@@ -287,6 +376,7 @@ export function LoginScreen({
           >
             {showError ? 'Clear error state' : 'Preview error state'}
           </button>
+          ) : <span />}
           <button
             type="button"
             onClick={() => {
@@ -321,7 +411,56 @@ export function LoginScreen({
             Sign up
           </button>
         </p>
+
+        {onDemoLogin && demoAccounts.length > 0 && (
+          <p className="text-center pb-20 md:pb-0">
+            <button
+              type="button"
+              onClick={() => setDemoOpen(true)}
+              className="text-[13px] font-medium text-[#52525B] dark:text-[#A1A1AA] hover:text-[#0A0A0A] dark:hover:text-[#FAFAFA] underline underline-offset-4"
+            >
+              Demo accounts
+            </button>
+          </p>
+        )}
       </form>
+
+      <BottomSheet
+        open={demoOpen}
+        onClose={() => setDemoOpen(false)}
+        title="Demo accounts"
+      >
+        <p className="text-[14px] text-[#52525B] dark:text-[#A1A1AA] mb-4">
+          Tap an account to sign in as that role. Staff roles are invited by
+          the trust and cannot sign up themselves.
+        </p>
+        <div className="space-y-2">
+          {demoAccounts.map((a) => (
+            <button
+              key={a.email}
+              type="button"
+              onClick={() => {
+                setDemoOpen(false);
+                onDemoLogin(a);
+              }}
+              className="w-full flex items-center justify-between gap-3 px-5 py-3.5 rounded-[20px] bg-[#F4F4F5] dark:bg-[#222224] hover:bg-[#ECECEE] dark:hover:bg-[#2E2E32] text-left active:scale-[0.98] transition-all"
+            >
+              <span className="min-w-0">
+                <span className="block text-[15px] font-semibold text-[#0A0A0A] dark:text-[#FAFAFA]">
+                  {a.label}
+                </span>
+                <span className="block text-[13px] text-[#52525B] dark:text-[#A1A1AA] truncate">
+                  {a.email}
+                </span>
+              </span>
+              <ChevronRight
+                className="w-4 h-4 shrink-0 text-[#52525B] dark:text-[#A1A1AA]"
+                strokeWidth={1.75}
+              />
+            </button>
+          ))}
+        </div>
+      </BottomSheet>
 
       <BottomSheet
         open={forgotOpen}
@@ -369,7 +508,6 @@ export function LoginScreen({
 
 export function RoleSelectScreen({ isDark, onToggleTheme, onContinue }) {
   const [selectedRole, setSelectedRole] = useState(null);
-  const [nonStudentSheet, setNonStudentSheet] = useState(false);
 
   const roles = [
     {
@@ -412,11 +550,7 @@ export function RoleSelectScreen({ isDark, onToggleTheme, onContinue }) {
 
   const handleContinue = () => {
     if (!selectedRole) return;
-    if (selectedRole === 'student') {
-      onContinue();
-    } else {
-      setNonStudentSheet(true);
-    }
+    onContinue(selectedRole);
   };
 
   return (
@@ -428,7 +562,7 @@ export function RoleSelectScreen({ isDark, onToggleTheme, onContinue }) {
             Sikshit Bharat
           </span>
         </div>
-        <ThemeToggle isDark={isDark} onToggleTheme={onToggleTheme} />
+        <ThemeToggle isDark={isDark} onToggle={onToggleTheme} />
       </header>
 
       <main className="flex-1 max-w-[1040px] w-full mx-auto px-5 md:px-8 py-8 md:py-12 pb-28">
@@ -475,35 +609,6 @@ export function RoleSelectScreen({ isDark, onToggleTheme, onContinue }) {
         </PrimaryButton>
       </div>
 
-      <BottomSheet
-        open={nonStudentSheet}
-        onClose={() => setNonStudentSheet(false)}
-        title="Student module preview"
-      >
-        <p className="text-[15px] text-[#52525B] dark:text-[#A1A1AA] leading-relaxed mb-6">
-          This interactive prototype covers Sign up, Log in, Role selection, and
-          the full Student module. Select <strong>Student</strong> to explore
-          the application and student dashboard.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <PrimaryButton
-            onClick={() => {
-              setSelectedRole('student');
-              setNonStudentSheet(false);
-              onContinue();
-            }}
-            className="flex-1"
-          >
-            Continue as Student
-          </PrimaryButton>
-          <SecondaryButton
-            onClick={() => setNonStudentSheet(false)}
-            className="flex-1"
-          >
-            Close
-          </SecondaryButton>
-        </div>
-      </BottomSheet>
     </div>
   );
 }
